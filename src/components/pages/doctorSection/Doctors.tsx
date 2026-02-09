@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import scss from "./Doctors.module.scss";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -58,6 +58,18 @@ export default function Doctors() {
   });
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState("");
+
+  // Блокировка прокрутки при открытом попапе
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -136,6 +148,12 @@ export default function Doctors() {
     setForm({ name: "", phone: "", message: "", service: "" });
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      closePopup();
+    }
+  };
+
   return (
     <section className={scss.doctors} id="doctors">
       <h2>Наши врачи</h2>
@@ -188,108 +206,121 @@ export default function Doctors() {
 
       {/* Popup */}
       {open && selectedDoctor && (
-        <div className={scss.popupOverlay} onClick={closePopup}>
+        <div
+          className={scss.popupOverlay}
+          onClick={closePopup}
+          onKeyDown={handleKeyDown}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="popup-title"
+        >
           <div className={scss.popup} onClick={(e) => e.stopPropagation()}>
             <button
               className={scss.closeButton}
               onClick={closePopup}
               aria-label="Закрыть форму"
+              autoFocus
             >
               ×
             </button>
 
-            <h3>Запись к врачу</h3>
-            <div className={scss.doctorInfo}>
-              <div className={scss.doctorAvatar}>
-                <Image
-                  src={selectedDoctor.img}
-                  alt={selectedDoctor.name}
-                  width={60}
-                  height={60}
-                  className={scss.doctorPopupImage}
+            <div className={scss.popupContent}>
+              <h3 id="popup-title">Запись к врачу</h3>
+
+              <div className={scss.doctorInfo}>
+                <div className={scss.doctorAvatar}>
+                  <Image
+                    src={selectedDoctor.img}
+                    alt={selectedDoctor.name}
+                    width={60}
+                    height={60}
+                    className={scss.doctorPopupImage}
+                  />
+                </div>
+                <div className={scss.doctorDetails}>
+                  <p className={scss.doctorName}>
+                    <strong>Врач:</strong> {selectedDoctor.name}
+                  </p>
+                  <p className={scss.doctorRole}>
+                    <strong>Специализация:</strong> {selectedDoctor.role}
+                  </p>
+                  <p className={scss.doctorExp}>
+                    <strong>Опыт работы:</strong> {selectedDoctor.exp}
+                  </p>
+                </div>
+              </div>
+
+              <div className={scss.formGroup}>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Ваше имя *"
+                  value={form.name}
+                  onChange={handleChange}
+                  className={scss.formInput}
+                  required
+                  disabled={loading}
+                />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Телефон *"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className={scss.formInput}
+                  required
+                  disabled={loading}
+                />
+                <input
+                  type="text"
+                  name="service"
+                  placeholder="Желаемая услуга"
+                  value={form.service}
+                  onChange={handleChange}
+                  className={scss.formInput}
+                  disabled={loading}
+                />
+                <textarea
+                  name="message"
+                  placeholder="Дополнительная информация (симптомы, пожелания по времени)"
+                  value={form.message}
+                  onChange={handleChange}
+                  className={scss.formTextarea}
+                  rows={4}
+                  disabled={loading}
                 />
               </div>
-              <p className={scss.doctorName}>
-                <strong>Врач:</strong> {selectedDoctor.name}
-              </p>
-              <p className={scss.doctorRole}>
-                <strong>Специализация:</strong> {selectedDoctor.role}
-              </p>
-              <p className={scss.doctorExp}>
-                <strong>Опыт работы:</strong> {selectedDoctor.exp}
-              </p>
-            </div>
 
-            <div className={scss.formGroup}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Ваше имя *"
-                value={form.name}
-                onChange={handleChange}
-                className={scss.formInput}
-                required
-                disabled={loading}
-              />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Телефон *"
-                value={form.phone}
-                onChange={handleChange}
-                className={scss.formInput}
-                required
-                disabled={loading}
-              />
-              <input
-                type="text"
-                name="service"
-                placeholder="Желаемая услуга"
-                value={form.service}
-                onChange={handleChange}
-                className={scss.formInput}
-                disabled={loading}
-              />
-              <textarea
-                name="message"
-                placeholder="Дополнительная информация (симптомы, пожелания по времени)"
-                value={form.message}
-                onChange={handleChange}
-                className={scss.formTextarea}
-                rows={4}
-                disabled={loading}
-              />
-            </div>
-
-            {notification && (
-              <div
-                className={`${scss.notification} ${
-                  notification.includes("✅") ? scss.success : scss.error
-                }`}
-              >
-                {notification}
-              </div>
-            )}
-
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className={scss.submitButton}
-              aria-label={loading ? "Отправка заявки..." : "Отправить заявку"}
-            >
-              {loading ? (
-                <>
-                  <span className={scss.spinner}></span>
-                  Отправка...
-                </>
-              ) : (
-                "Отправить заявку"
+              {notification && (
+                <div
+                  className={`${scss.notification} ${
+                    notification.includes("✅") ? scss.success : scss.error
+                  }`}
+                >
+                  {notification}
+                </div>
               )}
-            </button>
 
-            <p className={scss.privacy}>
-              Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
-            </p>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={scss.submitButton}
+                aria-label={loading ? "Отправка заявки..." : "Отправить заявку"}
+              >
+                {loading ? (
+                  <>
+                    <span className={scss.spinner}></span>
+                    Отправка...
+                  </>
+                ) : (
+                  "Отправить заявку"
+                )}
+              </button>
+
+              <p className={scss.privacy}>
+                Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
+              </p>
+            </div>
           </div>
         </div>
       )}
