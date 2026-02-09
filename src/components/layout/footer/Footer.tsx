@@ -2,6 +2,7 @@
 import scss from "./Footer.module.scss";
 import Image from "next/image";
 import logo from "../../images/logo.png"; // твой логотип
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -15,10 +16,10 @@ export default function Footer() {
 
           <div className={scss.links}>
             <h4>Меню</h4>
-            <a href="#">Главная</a>
-            <a href="#">Врачи</a>
-            <a href="#">Услуги</a>
-            <a href="#">Контакты</a>
+            <Link href="/doctors">Врачи</Link>
+            <Link href="/services">Услуги</Link>
+            <Link href="/contacts">Контакты</Link>
+            <Link href="/">Главная</Link>
           </div>
 
           <div className={scss.contact}>
